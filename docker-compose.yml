@@ -1,0 +1,17 @@
+services:
+  juice-shop:
+    image: bkimminich/juice-shop
+    ports: ['3000:3000']
+    networks: [lab-net]
+
+  waap-proxy:
+    image: owasp/modsecurity-crs:nginx
+    environment:
+      - BACKEND=http://juice-shop:3000
+    ports: ['8080:8080']
+    depends_on: [juice-shop]
+    networks: [lab-net]
+
+networks:
+  lab-net:
+    driver: bridge
