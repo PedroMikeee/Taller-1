@@ -1,0 +1,5 @@
+escenario,n_peticiones,latencia_media_ms,latencia_mediana_ms,latencia_min_ms,latencia_max_ms
+CON RASP - login,30,2.451,2.394,2.216,3.896
+SIN RASP - login,30,2.581,2.537,2.272,3.09
+CON RASP - search,30,2.495,2.476,2.223,2.916
+SIN RASP - search,30,2.555,2.524,2.194,3.072
