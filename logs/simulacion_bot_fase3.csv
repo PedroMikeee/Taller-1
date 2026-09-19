@@ -1,0 +1,6 @@
+escenario,req_per_minute,score,veredicto_A,veredicto_B
+Usuario normal (5 req/min),5,0.0808,NORMAL,NORMAL
+Usuario activo (30 req/min),30,0.0808,NORMAL,NORMAL
+Bot moderado (100 req/min),100,0.08578,NORMAL,NORMAL
+Bot agresivo (500 req/min),500,0.09184,NORMAL,NORMAL
+Bot extremo (2000 req/min),2000,0.10095,NORMAL,NORMAL

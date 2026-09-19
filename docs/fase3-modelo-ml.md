@@ -92,3 +92,79 @@ de datos etiquetado con ejemplos reales de ataques (aprendizaje supervisado
 en vez de solo detección de anomalías), y ajuste de hiperparámetros
 mediante validación cruzada con métricas de precision/recall — no por
 prueba y error sobre un único caso.
+
+## Punto 2 del documento: comparación de dos configuraciones de umbral
+
+Se compararon dos valores de `ANOMALY_THRESHOLD` contra los mismos 10 casos:
+
+- **Umbral A (-0.05)**: el sugerido como punto de partida por el documento.
+- **Umbral B (-0.01285)**: calculado estadísticamente como el percentil 1
+  de los scores de todo el tráfico normal de entrenamiento (36,073
+  muestras) — es decir, el punto donde queda el 1% más atípico del propio
+  tráfico legítimo.
+
+| Petición | Tipo real | Score | Umbral A (-0.05) | Umbral B (-0.01285) |
+|---|---|---|---|---|
+| Búsqueda de producto | normal | 0.086 | NORMAL | NORMAL |
+| Detalle de producto | normal | -0.034 | NORMAL | **ANOMALIA (FP)** |
+| Login válido | normal | -0.034 | NORMAL | **ANOMALIA (FP)** |
+| Ver carrito | normal | -0.049 | NORMAL | **ANOMALIA (FP)** |
+| Whoami | normal | -0.024 | NORMAL | **ANOMALIA (FP)** |
+| SQLi básico | ataque | 0.0002 | NORMAL | NORMAL |
+| SQLi comentarios | ataque | -0.004 | NORMAL | NORMAL |
+| UNION SELECT | ataque | -0.016 | NORMAL | **ANOMALIA (correcto)** |
+| XSS | ataque | -0.008 | NORMAL | NORMAL |
+| Evasión "0R" | ataque | 0.003 | NORMAL | NORMAL |
+
+**Resultado**: Umbral A → 0/5 detección, 0/5 falsos positivos. Umbral B →
+1/5 detección, **4/5 falsos positivos**.
+
+### Causa raíz: desbalance en los datos de entrenamiento
+
+El umbral B, calculado con un método estadístico válido, resultó
+inutilizable en la práctica: marcó como anómalos 4 de 5 tipos de tráfico
+legítimo distintos a la búsqueda de productos. Esto se explica por la
+composición del tráfico de entrenamiento: como se documentó en la sección
+de recolección de datos, el endpoint de búsqueda dominó abrumadoramente
+el conjunto (66,915 de las peticiones capturadas, por el autocompletado
+letra-por-letra), mientras que otros endpoints legítimos (detalle de
+producto, login, carrito, whoami) tuvieron una representación mucho menor.
+El modelo, en consecuencia, aprendió a considerar "buscar productos" como
+prácticamente la única actividad normal, penalizando cualquier otro tipo
+de interacción legítima con la tienda en cuanto se endurece el umbral.
+
+## Punto 3 del documento: simulación de ráfaga de bot/automatización
+
+Se simuló el mismo payload legítimo (`/rest/products/search?q=apple`)
+variando únicamente `req_per_minute`, de 5 (usuario normal) hasta 2000
+(bot extremo):
+
+| Escenario | req/min | Score | Umbral A | Umbral B |
+|---|---|---|---|---|
+| Usuario normal | 5 | 0.081 | NORMAL | NORMAL |
+| Usuario activo | 30 | 0.081 | NORMAL | NORMAL |
+| Bot moderado | 100 | 0.086 | NORMAL | NORMAL |
+| Bot agresivo | 500 | 0.092 | NORMAL | NORMAL |
+| Bot extremo | 2000 | 0.101 | NORMAL | NORMAL |
+
+**Hallazgo inesperado**: el score de anomalía **aumenta** (se vuelve más
+"normal") a medida que `req_per_minute` crece, en vez de disminuir. Esto es
+lo opuesto al comportamiento deseado de un detector de bots. La causa es
+la misma que el hallazgo anterior: el tráfico de entrenamiento incluyó
+ráfagas legítimas de alta frecuencia (hasta 133 peticiones/minuto, producto
+del autocompletado), por lo que el modelo aprendió que un `req_per_minute`
+alto es característico del tráfico normal observado, y no logra generalizar
+que un volumen extremo (2000/min) es indicativo de automatización.
+
+## Conclusión general de la Fase 3
+
+Los tres hallazgos (baja tasa de detección de inyecciones, alta tasa de
+falsos positivos al endurecer el umbral, e insensibilidad — incluso
+inversa — a ráfagas de bot) apuntan a una misma causa raíz: el conjunto de
+entrenamiento, aunque numeroso (36,073 muestras), está fuertemente
+desbalanceado hacia un único patrón de tráfico (búsquedas de autocompletado),
+lo cual limita severamente la capacidad del modelo para generalizar tanto
+a otros tipos de tráfico legítimo como a tráfico malicioso. Un trabajo
+futuro debería diversificar deliberadamente la recolección de tráfico
+normal (asegurando representación balanceada de cada endpoint) antes de
+considerar ajustes de umbral o de hiperparámetros.

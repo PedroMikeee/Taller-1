@@ -1,0 +1,11 @@
+peticion,tipo_real,score,veredicto_A(-0.05),veredicto_B(-0.01285)
+Normal - busqueda de producto,normal,0.08578,NORMAL,NORMAL
+Normal - detalle de producto,normal,-0.0339,NORMAL,ANOMALIA
+Normal - login valido,normal,-0.0339,NORMAL,ANOMALIA
+Normal - ver carrito,normal,-0.04932,NORMAL,ANOMALIA
+Normal - whoami,normal,-0.02394,NORMAL,ANOMALIA
+Ataque - SQLi basico,ataque,0.00015,NORMAL,NORMAL
+Ataque - SQLi comentarios,ataque,-0.00435,NORMAL,NORMAL
+Ataque - UNION SELECT,ataque,-0.01555,NORMAL,ANOMALIA
+Ataque - XSS,ataque,-0.00751,NORMAL,NORMAL
+Evasion - 0R (burlo el WAF),ataque,0.00264,NORMAL,NORMAL

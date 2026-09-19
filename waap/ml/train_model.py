@@ -15,9 +15,6 @@ model = IsolationForest(
     n_estimators=200, contamination=0.02, random_state=42
 ).fit(X_scaled)
 
-joblib.dump(model, "waap/ml/isolation_forest_model.pkl")
-joblib.dump(scaler, "waap/ml/scaler.pkl")
-
-print(f"Modelo entrenado con {len(df)} muestras de trafico normal.")
-print(f"Guardado: waap/ml/isolation_forest_model.pkl")
-print(f"Guardado: waap/ml/scaler.pkl")
+joblib.dump({'model': model, 'scaler': scaler}, 'waap/ml/model.pkl')
+print('Modelo entrenado y guardado en waap/ml/model.pkl')
+print(f'Muestras de entrenamiento: {len(df)}')
