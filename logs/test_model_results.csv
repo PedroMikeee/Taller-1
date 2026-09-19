@@ -1,0 +1,8 @@
+label,url_length,body_length,entropy,n_params,has_suspicious_chars,req_per_minute,prediction,anomaly_score,veredicto
+Normal - busqueda de producto,29,0,3.8313,1,0,133,1,0.08578179945738107,NORMAL
+Normal - login valido,16,45,4.453,0,0,5,-1,-0.03389510221966152,ANOMALIA
+Ataque bloqueado - SQLi basico,49,0,4.2387,1,1,5,1,0.00015052913499957743,NORMAL
+Ataque bloqueado - comentarios SQL,49,0,4.3874,1,1,5,-1,-0.004347116636807646,ANOMALIA
+Ataque bloqueado - UNION SELECT,81,0,4.3418,1,1,5,-1,-0.015554635661435667,ANOMALIA
+EVASION exitosa (0R) - no bloqueada por WAF,49,0,4.1824,1,0,5,1,0.0026374124874934957,NORMAL
+Ataque bloqueado - XSS,59,0,4.3809,1,1,5,-1,-0.00751057403894384,ANOMALIA
