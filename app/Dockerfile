@@ -4,15 +4,16 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Instalar dependencias primero para aprovechar la cache de capas de Docker
-COPY requirements.txt .
+# Requirements propios y livianos de esta app (NO el requirements.txt de la
+# raiz del repo, que trae librerias de ML de la Fase 3 incompatibles con
+# esta imagen base de Python 3.11)
+COPY app/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiar el codigo de la aplicacion
 COPY app/ .
 
 # Crear un usuario sin privilegios y ejecutar la app con el, en vez de root
-# (hallazgo real de Semgrep: dockerfile.security.missing-user.missing-user)
 RUN useradd --create-home --shell /bin/bash appuser
 USER appuser
 
