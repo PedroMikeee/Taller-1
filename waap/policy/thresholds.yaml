@@ -1,0 +1,20 @@
+# Política versionada del módulo IA/ML del WAAP (Fase 3)
+#
+# "Policy as code": cualquier cambio a este archivo debe pasar por
+# revisión de pares (pull request) y por el pipeline DevSecOps
+# (.github/workflows/devsecops.yml) antes de considerarse desplegado.
+# El pipeline no valida el VALOR de estos parámetros (eso requiere
+# criterio de negocio/seguridad), solo garantiza que el código y la
+# infraestructura que los usan pasan los controles de seguridad antes
+# de llegar a este punto.
+
+anomaly_threshold: -0.05   # "Umbral A" — ver docs/fase3-modelo-ml.md
+contamination: 0.02        # hiperparámetro de entrenamiento del IsolationForest
+
+notas: >
+  Se mantiene el Umbral A (-0.05) y no el Umbral B (percentil 1,
+  -0.01285) porque, aunque este último detecta un caso de ataque
+  adicional (UNION SELECT), produce falsos positivos en 4 de 5 tipos
+  de tráfico legítimo evaluados (ver tabla comparativa en
+  docs/fase3-modelo-ml.md). Cambiar este valor en producción requiere
+  reentrenar con un dataset de tráfico normal más balanceado primero.

@@ -1,0 +1,65 @@
+name: devsecops-pipeline
+
+on: [push, pull_request]
+
+jobs:
+  security-gate:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      # ---------- 1. SAST: análisis estático del código de la app ----------
+      - name: SAST - Semgrep
+        run: |
+          pip install semgrep
+          semgrep --config=p/owasp-top-ten app/ --error
+
+      # ---------- 2. SCA: dependencias con CVEs conocidos ----------
+      - name: SCA - pip-audit
+        run: |
+          pip install pip-audit
+          pip-audit -r requirements.txt
+
+      # ---------- 3. Build de la imagen de la app con RASP ----------
+      - name: Build de la imagen de la aplicación (app + RASP)
+        run: docker build -f app/Dockerfile -t taller-waap/app:${{ github.sha }} .
+
+      # ---------- 4. Container scan sobre la imagen construida ----------
+      - name: Container scan - Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'taller-waap/app:${{ github.sha }}'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+
+      # ---------- 5. IaC scan sobre docker-compose.yml y el Dockerfile ----------
+      - name: IaC scan - Checkov
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: .
+          quiet: true
+
+      # ---------- 6. Levantar el entorno objetivo para el DAST ----------
+      - name: Levantar Juice Shop + proxy WAAP
+        run: |
+          docker compose up -d
+          echo "Esperando a que el proxy WAAP responda..."
+          for i in $(seq 1 20); do
+            curl -sf http://localhost:8080 > /dev/null && break
+            sleep 3
+          done
+
+      # ---------- 7. DAST contra la aplicación ya protegida por el WAAP ----------
+      - name: DAST - OWASP ZAP baseline
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          target: 'http://localhost:8080'
+
+      # ---------- 8. Despliegue de reglas/política (solo si todo lo anterior pasó) ----------
+      - name: Despliegue de reglas y política del WAAP
+        if: success()
+        run: |
+          chmod +x scripts/deploy_waap_rules.sh
+          ./scripts/deploy_waap_rules.sh
