@@ -1,0 +1,12 @@
+# Riesgos aceptados y documentados (ver docs/fase5-devsecops.md)
+#
+# Ambos CVEs pertenecen a paquetes (msgpack, setuptools) empaquetados
+# INTERNAMENTE dentro de la propia instalacion de pip de la imagen base
+# python:3.11-alpine (usados por pip/ensurepip para el bootstrap de
+# entornos virtuales), no a dependencias declaradas en app/requirements.txt.
+# Se intento corregir actualizando pip/setuptools/wheel explicitamente en
+# el Dockerfile sin exito, ya que Trivy detecta una copia interna distinta
+# vendida dentro del propio pip, no la de site-packages que si se actualizo.
+
+GHSA-6v7p-g79w-8964
+CVE-2025-47273
