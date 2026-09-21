@@ -54,4 +54,9 @@ def search_norasp():
 
 
 if __name__ == "__main__":
+    # nosemgrep: python.flask.security.audit.app-run-param-config.avoid_app_run_with_bad_host
+    # Riesgo aceptado y documentado: host="0.0.0.0" es necesario para que el
+    # contenedor Docker sea alcanzable desde fuera de si mismo (mapeo de
+    # puertos). La exposicion real se mitiga por el aislamiento de red de
+    # Docker en este entorno de laboratorio. Ver docs/fase5-devsecops.md.
     app.run(host="0.0.0.0", port=5000)
