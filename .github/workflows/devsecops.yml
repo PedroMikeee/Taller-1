@@ -56,10 +56,21 @@ jobs:
           done
 
       # ---------- 7. DAST contra la aplicación ya protegida por el WAAP ----------
-      - name: DAST - OWASP ZAP baseline
-        uses: zaproxy/action-baseline@v0.12.0
-        with:
-          target: 'http://localhost:8080'
+      - name: DAST - OWASP ZAP baseline (invocacion directa via Docker)
+        # Se reemplazo la accion de terceros zaproxy/action-baseline por una
+        # invocacion directa de Docker: dicha accion presenta un bug conocido
+        # y documentado en la infraestructura de GitHub (subida de artifact
+        # falla con "artifact name is not valid", ver
+        # github.com/actions/upload-artifact/issues/410), no relacionado con
+        # la seguridad del proyecto. El escaneo real de ZAP (lo que importa
+        # para el pipeline) se preserva identico, solo se omite el paso
+        # posterior de creacion de issue/subida de artifact que fallaba.
+        run: |
+          docker run --rm --network=host \
+            -v "${{ github.workspace }}:/zap/wrk/:rw" \
+            ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
+            -t http://localhost:8080 \
+            -J report_json.json -w report_md.md -r report_html.html -I
 
       # ---------- 8. Despliegue de reglas/política (solo si todo lo anterior pasó) ----------
       - name: Despliegue de reglas y política del WAAP
