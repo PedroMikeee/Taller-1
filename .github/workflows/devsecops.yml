@@ -2,6 +2,9 @@ name: devsecops-pipeline
 
 on: [push, pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   security-gate:
     runs-on: ubuntu-latest
