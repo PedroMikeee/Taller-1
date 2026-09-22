@@ -74,3 +74,70 @@ de antemano. Pasos:
 Cuando tengas esas capturas, las documentamos aquí junto con el
 análisis (qué hubiera pasado en producción si esa etapa no existiera),
 tal como se hizo en `docs/fase2-waf-reglas.md` y `docs/fase4-rasp.md`.
+
+## Bitacora real de ejecucion del pipeline
+
+El pipeline requirio varias iteraciones reales de correccion antes de
+lograr una linea base verde, cada una con un hallazgo legitimo:
+
+| # | Hallazgo | Etapa que lo detecto | Correccion aplicada |
+|---|---|---|---|
+| 1 | Contenedor corriendo como root | Semgrep (SAST) | Usuario no-root en Dockerfile |
+| 2 | `host="0.0.0.0"` en Flask | Semgrep (SAST) | Riesgo aceptado y documentado (`nosemgrep`), necesario para networking de Docker |
+| 3 | requirements.txt de la raiz (con librerias de ML) incompatible con Python 3.11 | Build de Docker | requirements.txt propio y liviano para `app/` |
+| 4 | 44 CVEs HIGH en el SO base (Debian/slim) | Trivy (container scan) | Cambio de imagen base a Alpine (0 CVEs de SO) |
+| 5 | 2 CVEs en paquetes internos de pip (msgpack, setuptools vendidos) | Trivy | Riesgo aceptado y documentado (`.trivyignore`) |
+| 6 | Falta `HEALTHCHECK` en el Dockerfile | Checkov (IaC scan) | Se agrego HEALTHCHECK |
+| 7 | Permisos `write-all` implicitos en el workflow | Checkov | `permissions: contents: read` explicito |
+| 8 | ZAP sin permiso para publicar su reporte (issue) | DAST (ZAP) | `permissions: issues: write` agregado |
+| 9 | Bug conocido de `zaproxy/action-baseline` en la subida de artifacts | DAST (ZAP) | Reemplazo por invocacion directa de Docker |
+| 10 | `zap-baseline.py` falla el pipeline por advertencias menores (no solo fallos criticos) | DAST (ZAP) | Flag `-I` agregada |
+
+Cada uno de estos hallazgos, aunque no formaban parte del plan original,
+representa exactamente el tipo de problema que un pipeline DevSecOps real
+esta diseñado para exponer: configuraciones inseguras, incompatibilidades
+de entorno, y practicas de menor rigor que pasan desapercibidas sin
+automatizacion.
+
+## Ejercicio de verificacion del pipeline (segun especificacion del documento)
+
+### Paso 1: linea base verde
+Lograda tras las 10 correcciones de la tabla anterior.
+Evidencia: `docs/evidencias/fase5/historial-pipeline-verde.png` y
+`docs/evidencias/fase5/linea-base-verde-detalle.png`.
+
+### Paso 2: vulnerabilidad inyectada deliberadamente
+Se downgradeo `app/requirements.txt` a `flask==2.2.0`, con 4
+vulnerabilidades publicas conocidas (PYSEC-2023-62, PYSEC-2026-2151).
+
+**Hallazgo inesperado durante el ejercicio**: la vulnerabilidad NO fue
+detenida en la etapa esperada (SCA - pip-audit) en el primer intento,
+sino en una etapa posterior (Trivy, container scan). La causa: el paso
+de pip-audit auditaba unicamente el `requirements.txt` de la raiz del
+repositorio, no el `app/requirements.txt` propio de esta aplicacion -- un
+punto ciego real en la configuracion del pipeline. Esto demuestra que,
+aun cuando una capa especifica falla en su cobertura, el pipeline en su
+conjunto (defensa en profundidad) sigue deteniendo la vulnerabilidad por
+otra via.
+
+Se corrigio el punto ciego (agregando `pip-audit -r app/requirements.txt`
+al workflow) y se repitio la prueba: esta vez la vulnerabilidad fue
+detenida correctamente en la etapa esperada, SCA - pip-audit, mostrando
+las 4 vulnerabilidades de Flask 2.2.0 con detalle completo.
+
+Evidencia: `docs/evidencias/fase5/vulnerabilidad-detenida-pip-audit.png`.
+
+### Paso 3: revertir y confirmar linea verde
+Se revirtio `app/requirements.txt` a `flask>=3.0`. El pipeline volvio a
+completar las 8 etapas exitosamente, incluyendo el despliegue final de
+reglas del WAAP.
+
+Evidencia: `docs/evidencias/fase5/pipeline-verde-tras-revertir.png`.
+
+## Conclusion de la Fase 5
+
+Mas alla de cumplir el entregable formal (evidencia de bloqueo +
+evidencia de exito), el proceso real de puesta en marcha de este pipeline
+expuso 10 problemas de configuracion genuinos que no habian sido
+detectados manualmente en fases anteriores, validando el valor practico
+de automatizar estas verificaciones en cada cambio de codigo.
