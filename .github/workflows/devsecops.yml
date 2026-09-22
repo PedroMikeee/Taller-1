@@ -25,6 +25,7 @@ jobs:
         run: |
           pip install pip-audit
           pip-audit -r requirements.txt
+          pip-audit -r app/requirements.txt
 
       # ---------- 3. Build de la imagen de la app con RASP ----------
       - name: Build de la imagen de la aplicación (app + RASP)
