@@ -1,0 +1,109 @@
+[
+  {
+    "timestamp": "2026-09-23T19:53:14.003914",
+    "capa": "WAF",
+    "payload": "' OR '1'='1",
+    "endpoint": "/rest/products/search",
+    "veredicto": "BLOQUEADO",
+    "detalle": {
+      "rule_id": "942100"
+    },
+    "mttd_ms_simulado": 3
+  },
+  {
+    "timestamp": "2026-09-23T19:53:14.003955",
+    "capa": "WAF",
+    "payload": "' OR/**/1=1--",
+    "endpoint": "/rest/products/search",
+    "veredicto": "BLOQUEADO",
+    "detalle": {
+      "rule_id": "942100"
+    },
+    "mttd_ms_simulado": 3
+  },
+  {
+    "timestamp": "2026-09-23T19:53:14.003963",
+    "capa": "WAF",
+    "payload": "<script>alert(1)</script>",
+    "endpoint": "/rest/products/search",
+    "veredicto": "BLOQUEADO",
+    "detalle": {
+      "rule_id": "941xxx"
+    },
+    "mttd_ms_simulado": 3
+  },
+  {
+    "timestamp": "2026-09-23T19:53:14.003968",
+    "capa": "WAF",
+    "payload": "' 0R '1'='1",
+    "endpoint": "/rest/products/search",
+    "veredicto": "NO_DETECTADO",
+    "detalle": {
+      "rule_id": null
+    },
+    "mttd_ms_simulado": null
+  },
+  {
+    "timestamp": "2026-09-23T19:53:14.004019",
+    "capa": "IA/ML",
+    "payload": "' OR '1'='1",
+    "endpoint": "/rest/products/search",
+    "veredicto": "NORMAL (no detectado)",
+    "detalle": {
+      "anomaly_score": 0.00015,
+      "threshold": -0.05
+    },
+    "mttd_ms_simulado": null
+  },
+  {
+    "timestamp": "2026-09-23T19:53:14.004031",
+    "capa": "IA/ML",
+    "payload": "' UNION SELECT NULL...",
+    "endpoint": "/rest/products/search",
+    "veredicto": "ANOMALIA (detectado)",
+    "detalle": {
+      "anomaly_score": -0.01555,
+      "threshold": -0.05
+    },
+    "mttd_ms_simulado": 300000
+  },
+  {
+    "timestamp": "2026-09-23T19:53:14.004038",
+    "capa": "IA/ML",
+    "payload": "<script>alert(1)</script>",
+    "endpoint": "/rest/products/search",
+    "veredicto": "ANOMALIA (detectado)",
+    "detalle": {
+      "anomaly_score": -0.00751,
+      "threshold": -0.05
+    },
+    "mttd_ms_simulado": 300000
+  },
+  {
+    "timestamp": "2026-09-23T19:53:14.004066",
+    "capa": "RASP",
+    "payload": "' UNI...ON SELECT (fragmentado)",
+    "endpoint": "/search o /login (app propia)",
+    "veredicto": "BLOQUEADO",
+    "detalle": {},
+    "mttd_ms_simulado": 2
+  },
+  {
+    "timestamp": "2026-09-23T19:53:14.004073",
+    "capa": "RASP",
+    "payload": "' OR '1'='1",
+    "endpoint": "/search o /login (app propia)",
+    "veredicto": "NO_DETECTADO",
+    "detalle": {},
+    "mttd_ms_simulado": null
+  },
+  {
+    "timestamp": "2026-09-23T19:53:14.004078",
+    "capa": "RASP",
+    "payload": "' 0R '1'='1",
+    "endpoint": "/search o /login (app propia)",
+    "veredicto": "NO_DETECTADO",
+    "detalle": {},
+    "mttd_ms_simulado": null
+  }
+]
